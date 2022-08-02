@@ -11,13 +11,14 @@ fetch('http://localhost:3000/api/products')
       let id = document.createElement("a");
       id.href = "./product.html?id=" + data[i]._id;
       parent.appendChild(id);
+
       let parentCarte = id.appendChild(document.createElement("article"));
 
       let image = document.createElement('img');
       image.src = data[i].imageUrl;
       image.alt = data[i].altTxt;
       parentCarte.appendChild(image);
-
+      
       let nom = document.createElement('h3');
       nom.innerText = data[i].name;
       parentCarte.appendChild(nom);
