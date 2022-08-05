@@ -1,6 +1,5 @@
 let url = document.location
 let urlid = url.search.replace('?id=', '')
-//console.log(urlid)
 fetch('http://localhost:3000/api/products')
   .then(function (res) {
     if (res.ok) {
@@ -17,7 +16,6 @@ fetch('http://localhost:3000/api/products')
         image.alt = id.altTxt
         parent.appendChild(image)
 
-        console.log(id._id)
         document.getElementById('title').innerHTML = id.name
         document.getElementById('price').innerHTML = id.price
         document.getElementById('description').innerHTML = id.description
@@ -28,14 +26,25 @@ fetch('http://localhost:3000/api/products')
           let couleur = document.createElement('option')
           couleur.value = id.colors[i]
           couleur.innerHTML = id.colors[i]
-          console.log(couleur.value)
           parentcouleur.appendChild(couleur)
           i++
         }
+        let tableau = []
+        let test = document.getElementById('addToCart');
+        test.addEventListener('click', function () {
+          localStorage.setItem('id', urlid)
+          localStorage.setItem('quantite', document.getElementById('quantity').value)
+          let id = localStorage.getItem('id')
+          let quantite = localStorage.getItem('quantite')
+          tableau.push(localStorage)
+          console.log(id + ' ' + quantite)
+          console.log(tableau)
+          test.innerHTML = "ajouté !";
+        });
       };
     })
   })
-    .catch(function (err) {
-      console.log(err)
-      // Une erreur est survenue
-    })
+  .catch(function (err) {
+    console.log(err)
+    // Une erreur est survenue
+  })
