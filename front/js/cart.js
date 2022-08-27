@@ -1,79 +1,92 @@
-fetch('http://localhost:3000/api/products')
-  .then(function (res) {
-    if (res.ok) {
-      return res.json();
-    }
-  })
-  .then(function (data) {
-    let i = 0
-    let j = 0
-    let k = 0
-    let parent = document.getElementById('cart__items')
-    let panier = JSON.parse(localStorage.getItem('panier'))
-    console.log(data[0].colors[0])
-    let quantiteTotal = 0
-    let prixTotal = 0
+let panier = JSON.parse(localStorage.getItem('panier'))
+let tableauPromesses = new Array()
+let i = 0
 
-    affichage()
-
-    function affichage() {
-      let j = 0
-      while (j < panier.length) {
-        if (data[i]._id == panier[j].id) {
-          let article = document.createElement('article')
-          article.className = 'cart__item'
-          parent.appendChild(article)
-
-          let divimage = document.createElement('div')
-          divimage.className = 'cart__item__img'
-          let image = document.createElement('img')
-          article.appendChild(divimage)
-
-          image.src = data[i].imageUrl
-          image.alt = data[i].altTxt
-          divimage.appendChild(image)
-          console.log(i + 'test' + j)
-
-          let divproduit = document.createElement('div')
-          divproduit.className = "cart__item__content"
-          article.appendChild(divproduit)
-
-          let divdescription = document.createElement('div')
-          divdescription.className = 'cart__item__content__description'
-          divproduit.appendChild(divdescription)
-          
-          let descriptionTitre = document.createElement('h2')
-          descriptionTitre.innerHTML = data[i].name
-          divdescription.appendChild(descriptionTitre)
-          
-            let descriptionCouleur = document.createElement('p')
-            descriptionCouleur.innerHTML = panier[j].couleur
-            divdescription.appendChild(descriptionCouleur)
-            
-          let descriptionNom = document.createElement('p')
-          descriptionNom.innerHTML = data[i].price +' €'
-          divdescription.appendChild(descriptionNom)
-
-          let divquantite = document.createElement('div')
-          divquantite.className = 'cart__item__content__settings'
-          divquantite.innerHTML = "<div class='cart__item__content__settings__quantity'><p>Qté : </p><input type='number' class='itemQuantity' name='itemQuantity' min='1' max='100' value=" + panier[j].quantite + "></div><div class='cart__item__content__settings__delete'><p class='deleteItem'>Supprimer</p></div></div>"
-          divproduit.appendChild(divquantite)
-
-          totalPanier(i, j)
-          j++
-        }
-        i++
-      }
-    }
-
-    function totalPanier(i,j){
-      quantiteTotal = quantiteTotal + panier[j].quantite
-      console.log(prixTotal)
-      prixTotal = prixTotal + (data[i].price * panier[j].quantite)
-      console.log(prixTotal)
-
-      document.getElementById('totalQuantity').innerHTML = quantiteTotal
-      document.getElementById('totalPrice').innerHTML = prixTotal
-    }
+recherchePanier()
+function recherchePanier() {
+  while (i < panier.length) {
+    tableauPromesses.push(fetch('http://localhost:3000/api/products/' + panier[i].id))
+    i++
+  }
+  Promise.all(tableauPromesses).then(element => {
+    return Promise.all(element.map(r => r.json()))
+  }).then(api => {
+    main(api)
 
   })
+}
+
+function main(api) {
+  affichage(api)
+  totalCommande(api)
+  modifier(api)
+  supprimer(api)
+}
+
+function affichage(api) {
+  let div = document.createElement('div')
+  let j = 0
+  while (j < panier.length) {
+    let article = document.createElement('article')
+    article.classList.add("cart__item")
+    console.log(j+', '+ panier[j].id)
+    article.setAttribute("data-id", "{" + panier[j].id + "}")
+    article.setAttribute("data-color", "{" + panier[j].couleur + "}")
+    article.innerHTML = "<div class='cart__item__img'><img src=" + api[j].imageUrl + " alt='Photographie d'un canapé'></div><div class='cart__item__content'><div class='cart__item__content__description'><h2> " + api[j].name + " </h2><p>" + panier[j].couleur + "</p><p>" + api[j].price + " €</p></div><div class='cart__item__content__settings'><div class='cart__item__content__settings__quantity'><p>Qté : </p><input type='number' class='itemQuantity' name='itemQuantity' min='1' max='100' value='" + panier[j].quantite + "'></div><div class='cart__item__content__settings__delete'><p class='deleteItem'>Supprimer</p></div></div></div>"
+    document.getElementById('cart__items').appendChild(div)
+    div.appendChild(article)
+    document.getElementById('cart__items').replaceChild(article, div)
+    j++
+  }
+
+}
+
+function totalCommande(api) {
+  let j = 0
+  let prixTotal = 0
+  let quantiteTotal = 0
+  while (j < panier.length) {
+    let prix = api[j].price
+    let quantite = panier[j].quantite
+    prixTotal += prix * quantite
+    quantiteTotal += quantite
+    j++
+  }
+
+  document.getElementById('totalQuantity').innerHTML = quantiteTotal
+  document.getElementById('totalPrice').innerHTML = prixTotal
+}
+
+function modifier(api){
+  let inputQuantite = document.querySelector("input.itemQuantity")
+  inputQuantite.addEventListener('change', function () {
+    let couleur = panier[0].couleur
+    let id = panier[0].id
+    let panierFiltre = panier.filter(element => element.couleur == couleur && element.id == id)
+    Object.defineProperty(panierFiltre[0], 'quantite', {
+      value: parseInt(inputQuantite.value)
+    })
+    console.log(panier)
+    localStorage.setItem('panier', JSON.stringify(panier))
+    totalCommande(api)
+  })
+}
+
+function supprimer(api){
+  let boutonSupprimer = document.querySelector("p.deleteItem")
+  boutonSupprimer.addEventListener('click', function () {
+    let couleur = panier[0].couleur
+    let id = panier[0].id
+    let panierFiltre = panier.filter(element => element.couleur == couleur && element.id == id)
+    let test = panier.indexOf(panierFiltre[0])
+    console.log(test)
+    panier.splice(test, test+1)
+    console.log(panierFiltre[0])
+    localStorage.setItem('panier', JSON.stringify(panier))
+    effacer(test)
+  })
+}
+/*
+function effacer(index){
+
+}*/
