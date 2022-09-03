@@ -12,31 +12,26 @@ function recherchePanier() {
     return Promise.all(element.map(r => r.json()))
   }).then(api => {
     main(api)
-
   })
 }
-
 function main(api) {
-  affichage(api,panier)
+  affichage(api)
   totalCommande(api)
   modifier(api)
   supprimer(api)
+  verificationFormulaire()
 }
 
-function affichage(api,panier) {
-  let div = document.createElement('div')
+function affichage(api) {
+  let div = document.getElementById('cart__items')
   let j = 0
-  console.log(panier)
-  console.log(panier.length)
   while (j < panier.length) {
     let article = document.createElement('article')
     article.classList.add("cart__item")
-    article.setAttribute("data-id", "{" + panier[j].id + "}")
-    article.setAttribute("data-color", "{" + panier[j].couleur + "}")
+    article.setAttribute("data-id",panier[j].id)
+    article.setAttribute("data-color",panier[j].couleur)
     article.innerHTML = "<div class='cart__item__img'><img src=" + api[j].imageUrl + " alt='Photographie d'un canapé'></div><div class='cart__item__content'><div class='cart__item__content__description'><h2> " + api[j].name + " </h2><p>" + panier[j].couleur + "</p><p>" + api[j].price + " €</p></div><div class='cart__item__content__settings'><div class='cart__item__content__settings__quantity'><p>Qté : </p><input type='number' class='itemQuantity' name='itemQuantity' min='1' max='100' value='" + panier[j].quantite + "'></div><div class='cart__item__content__settings__delete'><p class='deleteItem'>Supprimer</p></div></div></div>"
-    document.getElementById('cart__items').appendChild(div)
     div.appendChild(article)
-    document.getElementById('cart__items').replaceChild(article, div)
     j++
   }
 
@@ -59,41 +54,64 @@ function totalCommande(api) {
 }
 
 function modifier(api) {
-  let article = document.querySelectorAll("input.itemQuantity")
-  let tableau = Array.from(article)
-  article.forEach(element => element.addEventListener("click", function () {
-    let indexNodeList = tableau.indexOf(element)
-    let couleur = panier[indexNodeList].couleur
-    let id = panier[indexNodeList].id
-    let panierFiltre = panier.filter(element => element.couleur == couleur && element.id == id)
-    Object.defineProperty(panierFiltre[0], 'quantite', {
-      value: parseInt(element.value)
-    })
+  let buton = Array.from(document.querySelectorAll("input.itemQuantity"))
+  buton.forEach(element => element.addEventListener("change", function (event) {
+    let indexNodeList = buton.indexOf(event.currentTarget)
+    panier[indexNodeList].quantite = parseInt(event.currentTarget.value)
     localStorage.setItem('panier', JSON.stringify(panier))
     totalCommande(api)
   }))
 }
 
 function supprimer(api) {
-  let article = document.querySelectorAll("p.deleteItem")
-  let tableau = Array.from(article)
-  article.forEach(element => element.addEventListener("click", function () {
-    let indexNodeList = tableau.indexOf(element)
-    let couleur = panier[indexNodeList].couleur
-    let id = panier[indexNodeList].id
-    let panierFiltre = panier.filter(element => element.couleur !== couleur || element.id !== id)
-    console.log(panierFiltre)
-    //localStorage.setItem('panier', JSON.stringify(panierFiltre))
-    console.log(localStorage.getItem('panier'))
-    effacer(indexNodeList,api,panier)
+  let article = Array.from(document.querySelectorAll(".cart__item"))
+  let buton = Array.from(document.querySelectorAll("p.deleteItem"))
+  buton.forEach(element => element.addEventListener("click", function (event) {
+    console.log(buton)
+    let indexNodeList = buton.indexOf(event.currentTarget)
+    console.log(indexNodeList)
+    console.log(article)
+    //let couleur = panier[indexNodeList].couleur
+    //console.log(couleur)
+    //let id = panier[indexNodeList].id
+    //panier = panier.filter(element => element.couleur !== couleur || element.id !== id)
+    api.splice(indexNodeList, 1)
+    panier.splice(indexNodeList, 1)
+    article[indexNodeList].remove()
+    article.splice(indexNodeList, 1)
+    buton.splice(indexNodeList, 1)
+    localStorage.setItem('panier', JSON.stringify(panier))
+    console.log('article : ' + article)
+    console.log(article)
+    console.log('panier : ' + panier)
+    console.log('api : ' + api)
+    totalCommande(api)
   }))
 }
 
-function effacer(index,api, panier){
-  let article = document.querySelectorAll("article.cart__item")
-  let tableau = Array.from(article)
-  article.forEach(element => element.addEventListener("click", function () {
-    console.log(element)
-  affichage(api,panier)
-}))
+function verificationFormulaire(){
+  let prenom = document.getElementById('firstName')
+  let nom = document.getElementById('lastName')
+  let adresse = document.getElementById('address')
+  let ville = document.getElementById('city')
+  let mail = document.getElementById('email')
+  let tableau = new Array()
+  tableau.push(prenom, nom, adresse, ville, mail)
+  let regexPrenom = /[0-9]/
+  document.querySelector('.cart__order__form').setAttribute('action','./confirmation.html')
+  tableau.forEach(element => element.addEventListener('change', function(event){
+    /* if(event.currentTarget.value.length < 1){
+      document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'veuillez remplir ce champ'
+    } */
+    if(event.currentTarget === prenom || event.currentTarget === nom || event.currentTarget === ville){
+      if(!!element.value.match(regexPrenom)){
+        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'veuillez ne pas inscrire de chiffre'
+        console.log(event)
+        return false
+      }else{
+        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
+        return
+      }
+    }
+  }))
 }
