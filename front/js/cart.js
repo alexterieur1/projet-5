@@ -28,8 +28,8 @@ function affichage(api) {
   while (j < panier.length) {
     let article = document.createElement('article')
     article.classList.add("cart__item")
-    article.setAttribute("data-id",panier[j].id)
-    article.setAttribute("data-color",panier[j].couleur)
+    article.setAttribute("data-id", panier[j].id)
+    article.setAttribute("data-color", panier[j].couleur)
     article.innerHTML = "<div class='cart__item__img'><img src=" + api[j].imageUrl + " alt='Photographie d'un canapé'></div><div class='cart__item__content'><div class='cart__item__content__description'><h2> " + api[j].name + " </h2><p>" + panier[j].couleur + "</p><p>" + api[j].price + " €</p></div><div class='cart__item__content__settings'><div class='cart__item__content__settings__quantity'><p>Qté : </p><input type='number' class='itemQuantity' name='itemQuantity' min='1' max='100' value='" + panier[j].quantite + "'></div><div class='cart__item__content__settings__delete'><p class='deleteItem'>Supprimer</p></div></div></div>"
     div.appendChild(article)
     j++
@@ -88,30 +88,68 @@ function supprimer(api) {
     totalCommande(api)
   }))
 }
-
-function verificationFormulaire(){
-  let prenom = document.getElementById('firstName')
-  let nom = document.getElementById('lastName')
-  let adresse = document.getElementById('address')
-  let ville = document.getElementById('city')
-  let mail = document.getElementById('email')
-  let tableau = new Array()
-  tableau.push(prenom, nom, adresse, ville, mail)
+function verificationFormulaire() {
+  let firstName = document.getElementById('firstName')
+  let lastName = document.getElementById('lastName')
+  let adress = document.getElementById('address')
+  let city = document.getElementById('city')
+  let email = document.getElementById('email')
+  let tableauFormulaire = new Array()
+  tableauFormulaire.push(firstName, lastName, adress, city, email)
   let regexPrenom = /[0-9]/
-  document.querySelector('.cart__order__form').setAttribute('action','./confirmation.html')
-  tableau.forEach(element => element.addEventListener('change', function(event){
-    /* if(event.currentTarget.value.length < 1){
-      document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'veuillez remplir ce champ'
-    } */
-    if(event.currentTarget === prenom || event.currentTarget === nom || event.currentTarget === ville){
-      if(!!element.value.match(regexPrenom)){
-        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'veuillez ne pas inscrire de chiffre'
-        console.log(event)
-        return false
-      }else{
-        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
-        return
-      }
+  let products = new Array()
+  document.getElementById('order').addEventListener("click", function (event) {
+    event.preventDefault()
+    contact = {
+      "firstName": firstName.value,
+      "lastName": lastName.value,
+      "address": adress.value,
+      "city": city.value,
+      "email": email.value
     }
-  }))
+    JSON.parse(localStorage.getItem('panier')).forEach(element => products.push(element.id))
+    console.log(contact)
+    console.log(products)
+    console.log(tableauFormulaire)
+    let i = 0
+    while (i < Object.keys(contact).length) {
+      if (Object.values(contact)[i].length === 0) {
+        document.getElementById(Object.keys(contact)[i] + 'ErrorMsg').textContent = 'Veuillez remplir cette case'
+      }
+      i++
+    }
+    envoieFormulaireServeur(contact, products)
+    tableauFormulaire.forEach(element => element.addEventListener('change', function (event) {
+      console.log(event.currentTarget.value.length)
+      if (event.currentTarget === firstName || event.currentTarget === lastName || event.currentTarget === city) {
+        if (!!element.value.match(regexPrenom)) {
+          document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'veuillez ne pas inscrire de chiffre'
+        }
+        else {
+          document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
+        }
+      } if (event.currentTarget.value.length > 0)
+        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
+    }))
+  })
+}
+
+function envoieFormulaireServeur(contact, products) {
+  Object.keys(contact).map(element => {
+    if (document.getElementById(element).value.length >= 1) {
+      fetch('http://localhost:3000/api/products/order', {
+        method: "POST",
+        body: JSON.stringify({ contact, products }),
+         headers: { "Content-Type": "application/json" },
+      })
+        .then((response => {
+          if (response.status == 201) {
+            return response.json();
+          }
+        })).then((response) => {
+          document.location.href = "confirmation.html?orderId="+response.orderId;
+      })
+      .catch((erreur) => console.log("erreur : " + erreur));
+    }
+  })
 }
