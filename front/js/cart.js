@@ -1,13 +1,9 @@
 let panier = JSON.parse(localStorage.getItem('panier'))
 let tableauPromesses = new Array()
-let i = 0
 
 recherchePanier()
 function recherchePanier() {
-  while (i < panier.length) {
-    tableauPromesses.push(fetch('http://localhost:3000/api/products/' + panier[i].id))
-    i++
-  }
+  panier.map(element => tableauPromesses.push(fetch('http://localhost:3000/api/products/' + element.id)))
   Promise.all(tableauPromesses).then(element => {
     return Promise.all(element.map(r => r.json()))
   }).then(api => {
@@ -15,14 +11,14 @@ function recherchePanier() {
   })
 }
 function main(api) {
-  affichage(api)
-  totalCommande(api)
-  modifier(api)
-  supprimer(api)
+  affichageDuPanierDansLeDom(api)
+  CalculDeLaQuantiteEtDuPrixTotal(api)
+  modificationValeurInputCanape(api)
+  supprimerCanapeDuPanier(api)
   verificationFormulaire()
 }
 
-function affichage(api) {
+function affichageDuPanierDansLeDom(api) {
   let div = document.getElementById('cart__items')
   let j = 0
   while (j < panier.length) {
@@ -37,7 +33,7 @@ function affichage(api) {
 
 }
 
-function totalCommande(api) {
+function CalculDeLaQuantiteEtDuPrixTotal(api) {
   let j = 0
   let prixTotal = 0
   let quantiteTotal = 0
@@ -53,17 +49,19 @@ function totalCommande(api) {
   document.getElementById('totalPrice').innerHTML = prixTotal
 }
 
-function modifier(api) {
+function modificationValeurInputCanape(api) {
   let buton = Array.from(document.querySelectorAll("input.itemQuantity"))
   buton.forEach(element => element.addEventListener("change", function (event) {
     let indexNodeList = buton.indexOf(event.currentTarget)
     panier[indexNodeList].quantite = parseInt(event.currentTarget.value)
+    console.log(indexNodeList)
+    console.log(panier)
     localStorage.setItem('panier', JSON.stringify(panier))
-    totalCommande(api)
+    CalculDeLaQuantiteEtDuPrixTotal(api)
   }))
 }
 
-function supprimer(api) {
+function supprimerCanapeDuPanier(api) {
   let article = Array.from(document.querySelectorAll(".cart__item"))
   let buton = Array.from(document.querySelectorAll("p.deleteItem"))
   buton.forEach(element => element.addEventListener("click", function (event) {
@@ -71,21 +69,17 @@ function supprimer(api) {
     let indexNodeList = buton.indexOf(event.currentTarget)
     console.log(indexNodeList)
     console.log(article)
-    //let couleur = panier[indexNodeList].couleur
-    //console.log(couleur)
-    //let id = panier[indexNodeList].id
-    //panier = panier.filter(element => element.couleur !== couleur || element.id !== id)
     api.splice(indexNodeList, 1)
     panier.splice(indexNodeList, 1)
     article[indexNodeList].remove()
     article.splice(indexNodeList, 1)
     buton.splice(indexNodeList, 1)
     localStorage.setItem('panier', JSON.stringify(panier))
-    console.log('article : ' + article)
     console.log(article)
-    console.log('panier : ' + panier)
-    console.log('api : ' + api)
-    totalCommande(api)
+    console.log(article)
+    console.log(panier)
+    console.log(api)
+    CalculDeLaQuantiteEtDuPrixTotal(api)
   }))
 }
 function verificationFormulaire() {
