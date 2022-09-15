@@ -1,24 +1,27 @@
 let panier = JSON.parse(localStorage.getItem('panier'))
 let tableauPromesses = new Array()
+let api = null
 
-recherchePanier()
-function recherchePanier() {
+recherchePanierEnLocal()
+//recherche les informations des canapés stockés dans le panier en local
+function recherchePanierEnLocal() {
   panier.map(element => tableauPromesses.push(fetch('http://localhost:3000/api/products/' + element.id)))
   Promise.all(tableauPromesses).then(element => {
     return Promise.all(element.map(r => r.json()))
-  }).then(api => {
-    main(api)
+  }).then(response => {
+    api = response
+    main()
   })
 }
-function main(api) {
-  affichageDuPanierDansLeDom(api)
-  CalculDeLaQuantiteEtDuPrixTotal(api)
-  modificationValeurInputCanape(api)
-  supprimerCanapeDuPanier(api)
+function main() {
+  affichageDuPanierDansLeDom()
+  CalculDeLaQuantiteEtDuPrixTotal()
+  modificationValeurInputCanape()
+  supprimerCanapeDuPanier()
   verificationFormulaire()
 }
-
-function affichageDuPanierDansLeDom(api) {
+//affihe en liste, les caanpés présent dans le panier
+function affichageDuPanierDansLeDom() {
   let div = document.getElementById('cart__items')
   let j = 0
   while (j < panier.length) {
@@ -32,8 +35,8 @@ function affichageDuPanierDansLeDom(api) {
   }
 
 }
-
-function CalculDeLaQuantiteEtDuPrixTotal(api) {
+//calcul la quantité de canapés et le prix total du panier
+function CalculDeLaQuantiteEtDuPrixTotal() {
   let j = 0
   let prixTotal = 0
   let quantiteTotal = 0
@@ -48,8 +51,8 @@ function CalculDeLaQuantiteEtDuPrixTotal(api) {
   document.getElementById('totalQuantity').innerHTML = quantiteTotal
   document.getElementById('totalPrice').innerHTML = prixTotal
 }
-
-function modificationValeurInputCanape(api) {
+//modifie la quantite d'un canapé dans le panier
+function modificationValeurInputCanape() {
   let buton = Array.from(document.querySelectorAll("input.itemQuantity"))
   buton.forEach(element => element.addEventListener("change", function (event) {
     let indexNodeList = buton.indexOf(event.currentTarget)
@@ -57,11 +60,11 @@ function modificationValeurInputCanape(api) {
     console.log(indexNodeList)
     console.log(panier)
     localStorage.setItem('panier', JSON.stringify(panier))
-    CalculDeLaQuantiteEtDuPrixTotal(api)
+    CalculDeLaQuantiteEtDuPrixTotal()
   }))
 }
-
-function supprimerCanapeDuPanier(api) {
+//supprimer le canapé du panier et de la page
+function supprimerCanapeDuPanier() {
   let article = Array.from(document.querySelectorAll(".cart__item"))
   let buton = Array.from(document.querySelectorAll("p.deleteItem"))
   buton.forEach(element => element.addEventListener("click", function (event) {
@@ -79,9 +82,10 @@ function supprimerCanapeDuPanier(api) {
     console.log(article)
     console.log(panier)
     console.log(api)
-    CalculDeLaQuantiteEtDuPrixTotal(api)
+    CalculDeLaQuantiteEtDuPrixTotal()
   }))
 }
+//recupere les informations du formulaire et du panier
 function verificationFormulaire() {
   let firstName = document.getElementById('firstName')
   let lastName = document.getElementById('lastName')
@@ -90,8 +94,9 @@ function verificationFormulaire() {
   let email = document.getElementById('email')
   let tableauFormulaire = new Array()
   tableauFormulaire.push(firstName, lastName, adress, city, email)
-  let regexPrenom = /[0-9]/
-  let products = new Array()
+  let regexChiffre = /^[a-zA-Z éèïî-]+$/
+  let regexEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  testRegex(tableauFormulaire, regexChiffre, regexEmail)
   document.getElementById('order').addEventListener("click", function (event) {
     event.preventDefault()
     contact = {
@@ -101,6 +106,7 @@ function verificationFormulaire() {
       "city": city.value,
       "email": email.value
     }
+    let products = new Array()
     JSON.parse(localStorage.getItem('panier')).forEach(element => products.push(element.id))
     console.log(contact)
     console.log(products)
@@ -108,26 +114,16 @@ function verificationFormulaire() {
     let i = 0
     while (i < Object.keys(contact).length) {
       if (Object.values(contact)[i].length === 0) {
-        document.getElementById(Object.keys(contact)[i] + 'ErrorMsg').textContent = 'Veuillez remplir cette case'
+        document.getElementById(Object.keys(contact)[i] + 'ErrorMsg').textContent = 'Veuillez remplir ce champs'
       }
       i++
     }
-    envoieFormulaireServeur(contact, products)
-    tableauFormulaire.forEach(element => element.addEventListener('change', function (event) {
-      console.log(event.currentTarget.value.length)
-      if (event.currentTarget === firstName || event.currentTarget === lastName || event.currentTarget === city) {
-        if (!!element.value.match(regexPrenom)) {
-          document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'veuillez ne pas inscrire de chiffre'
-        }
-        else {
-          document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
-        }
-      } if (event.currentTarget.value.length > 0)
-        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
-    }))
+    if(regexChiffre.test(firstName.value) == true && regexChiffre.test(lastName.value) == true && regexChiffre.test(city.value) == true && regexEmail.test(email.value) == true){
+      envoieFormulaireServeur(contact, products)
+    }
   })
 }
-
+//envoie le formulaire au serveur
 function envoieFormulaireServeur(contact, products) {
   Object.keys(contact).map(element => {
     if (document.getElementById(element).value.length >= 1) {
@@ -138,12 +134,37 @@ function envoieFormulaireServeur(contact, products) {
       })
         .then((response => {
           if (response.status == 201) {
+            console.log('test')
             return response.json();
           }
-        })).then((response) => {
+        })).then((response) => {//dirige vers la page confirmation pour signalé au client que l'achat a été effectué
           document.location.href = "confirmation.html?orderId="+response.orderId;
+          localStorage.removeItem('panier')
       })
       .catch((erreur) => console.log("erreur : " + erreur));
     }
   })
+}
+//verifie le bon formats des inputs du formulaire
+function testRegex(tableauFormulaire, regexChiffre, regexEmail){
+  tableauFormulaire.forEach(element => element.addEventListener('change', function (event) {
+    console.log(event.currentTarget.value.length)
+    console.log(element)
+      console.log(Boolean(regexChiffre.test(firstName.value) == true && regexChiffre.test(lastName.value) == true && regexChiffre.test(city.value) == true && regexEmail.test(email.value) == true))
+      if(true){
+        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
+      }
+      if ((event.currentTarget === firstName || event.currentTarget === lastName || event.currentTarget === city) && !regexChiffre.test(element.value)) {
+        console.log(event.currentTarget.id)
+        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'Veuillez ne pas inscrire de chiffre'
+      }
+      if (event.currentTarget === email && !regexEmail.test(element.value)) {
+        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'veuillez écrire une adresse mail valide'
+      }
+      if (event.currentTarget.value.length < 1){
+        document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
+      }
+    }
+    
+  ))
 }

@@ -38,7 +38,7 @@ fetch('http://localhost:3000/api/products/' + url)
         let tableau = new Array()
 
         verification()
-
+        //verifie si la quntité a été selectionner
         function verificationQuantite(nombre) {
           console.log(nombre)
           if (quantiteChoisi >= 1 && quantiteChoisi <= 100) {
@@ -49,7 +49,7 @@ fetch('http://localhost:3000/api/products/' + url)
             return false
           }
         }
-
+        //verifie si la couleur a été selectionner
         function verificationCouleur(couleur) {
           console.log(couleur)
           if (!!couleur) {
@@ -60,7 +60,7 @@ fetch('http://localhost:3000/api/products/' + url)
             return false
           }
         }
-
+        //verifie que les informations ont bien été sélectionner pour constituer le panier
         function verification() {
           if (verificationCouleur(couleurChoisi) == false && !!verificationQuantite(quantiteChoisi) == false) {
             bouton.innerHTML = 'Veuillez vérifier les données saisies '
@@ -73,7 +73,7 @@ fetch('http://localhost:3000/api/products/' + url)
             }
           }
         }
-
+        //aiguille le code si le canapé de la page est dans le panier ou non
         function condition(couleur, id) {
           panierVide()
           let tableaufiltre = tableau.filter(element => element.couleur == couleur && element.id == id)
@@ -83,14 +83,14 @@ fetch('http://localhost:3000/api/products/' + url)
             enregistrementCanapeExistance(tableaufiltre)
           }
         }
-
+        //ajoute les informations du canapéx pour le mettre dans le panier
         function enregistrementCanapeAbsence() {
           tableau.push(article)
           localStorage.setItem('panier', JSON.stringify(tableau))
           bouton.innerHTML = "Ajouté !"
           console.log(localStorage.getItem('panier'))
         }
-
+        //enregistre la nouvelle quantite d'un canapé si celui ci est deja dans le panier
         function enregistrementCanapeExistance(tableaufiltre) {
           article.quantite = quantiteChoisi + tableaufiltre[0].quantite
           Object.defineProperty(tableaufiltre[0], 'quantite', {
@@ -98,7 +98,7 @@ fetch('http://localhost:3000/api/products/' + url)
           })
           localStorage.setItem('panier', JSON.stringify(tableau))
         }
-
+        //créer un panier si le panier est vide
         function panierVide() {
           if (!!localStorage.getItem('panier')) {
             console.log(JSON.parse(localStorage.getItem('panier')))

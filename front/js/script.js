@@ -1,10 +1,13 @@
-fetch('http://localhost:3000/api/products')
+//recherche les informations dans l'API 
+RechercheDesCanapes()
+function RechercheDesCanapes(){
+  fetch('http://localhost:3000/api/products')
   .then(function (res) {
     if (res.ok) {
       return res.json();
     }
   })
-  .then(function (data) {
+  .then(function AffichageDesCanapés(data) {//affiche les informations de l'API dans le dom
     let i = 0;
     let parent = document.getElementById("items");
     while (i < data.length) {
@@ -32,4 +35,5 @@ fetch('http://localhost:3000/api/products')
   })
   .catch(function (err) {
     // Une erreur est survenue
-  });
+  })
+}
