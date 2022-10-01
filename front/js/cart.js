@@ -57,8 +57,6 @@ function modificationValeurInputCanape() {
   buton.forEach(element => element.addEventListener("change", function (event) {
     let indexNodeList = buton.indexOf(event.currentTarget)
     panier[indexNodeList].quantite = parseInt(event.currentTarget.value)
-    console.log(indexNodeList)
-    console.log(panier)
     localStorage.setItem('panier', JSON.stringify(panier))
     CalculDeLaQuantiteEtDuPrixTotal()
   }))
@@ -68,20 +66,13 @@ function supprimerCanapeDuPanier() {
   let article = Array.from(document.querySelectorAll(".cart__item"))
   let buton = Array.from(document.querySelectorAll("p.deleteItem"))
   buton.forEach(element => element.addEventListener("click", function (event) {
-    console.log(buton)
     let indexNodeList = buton.indexOf(event.currentTarget)
-    console.log(indexNodeList)
-    console.log(article)
     api.splice(indexNodeList, 1)
     panier.splice(indexNodeList, 1)
     article[indexNodeList].remove()
     article.splice(indexNodeList, 1)
     buton.splice(indexNodeList, 1)
     localStorage.setItem('panier', JSON.stringify(panier))
-    console.log(article)
-    console.log(article)
-    console.log(panier)
-    console.log(api)
     CalculDeLaQuantiteEtDuPrixTotal()
   }))
 }
@@ -108,9 +99,6 @@ function verificationFormulaire() {
     }
     let products = new Array()
     JSON.parse(localStorage.getItem('panier')).forEach(element => products.push(element.id))
-    console.log(contact)
-    console.log(products)
-    console.log(tableauFormulaire)
     let i = 0
     while (i < Object.keys(contact).length) {
       if (Object.values(contact)[i].length === 0) {
@@ -134,7 +122,6 @@ function envoieFormulaireServeur(contact, products) {
       })
         .then((response => {
           if (response.status == 201) {
-            console.log('test')
             return response.json();
           }
         })).then((response) => {//dirige vers la page confirmation pour signalé au client que l'achat a été effectué
@@ -148,14 +135,10 @@ function envoieFormulaireServeur(contact, products) {
 //verifie le bon formats des inputs du formulaire
 function testRegex(tableauFormulaire, regexChiffre, regexEmail){
   tableauFormulaire.forEach(element => element.addEventListener('change', function (event) {
-    console.log(event.currentTarget.value.length)
-    console.log(element)
-      console.log(Boolean(regexChiffre.test(firstName.value) == true && regexChiffre.test(lastName.value) == true && regexChiffre.test(city.value) == true && regexEmail.test(email.value) == true))
       if(true){
         document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = ''
       }
       if ((event.currentTarget === firstName || event.currentTarget === lastName || event.currentTarget === city) && !regexChiffre.test(element.value)) {
-        console.log(event.currentTarget.id)
         document.getElementById(event.currentTarget.id + 'ErrorMsg').textContent = 'Veuillez ne pas inscrire de chiffre'
       }
       if (event.currentTarget === email && !regexEmail.test(element.value)) {

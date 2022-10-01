@@ -8,7 +8,7 @@ fetch('http://localhost:3000/api/products/' + url)
   })
   .then(function (data) {
     if (data._id === url) {
-      let parent = document.getElementById('item__img')
+      let parent = document.querySelector('.item__img')
 
       let image = document.createElement('img')
       image.src = data.imageUrl
@@ -40,7 +40,6 @@ fetch('http://localhost:3000/api/products/' + url)
         verification()
         //verifie si la quntité a été selectionner
         function verificationQuantite(nombre) {
-          console.log(nombre)
           if (quantiteChoisi >= 1 && quantiteChoisi <= 100) {
             article.quantite = quantiteChoisi
             return nombre
@@ -51,7 +50,6 @@ fetch('http://localhost:3000/api/products/' + url)
         }
         //verifie si la couleur a été selectionner
         function verificationCouleur(couleur) {
-          console.log(couleur)
           if (!!couleur) {
             article.couleur = couleur
             return couleurChoisi
@@ -88,7 +86,6 @@ fetch('http://localhost:3000/api/products/' + url)
           tableau.push(article)
           localStorage.setItem('panier', JSON.stringify(tableau))
           bouton.innerHTML = "Ajouté !"
-          console.log(localStorage.getItem('panier'))
         }
         //enregistre la nouvelle quantite d'un canapé si celui ci est deja dans le panier
         function enregistrementCanapeExistance(tableaufiltre) {
@@ -101,7 +98,6 @@ fetch('http://localhost:3000/api/products/' + url)
         //créer un panier si le panier est vide
         function panierVide() {
           if (!!localStorage.getItem('panier')) {
-            console.log(JSON.parse(localStorage.getItem('panier')))
             return tableau = JSON.parse(localStorage.getItem('panier'))
           }
         }
